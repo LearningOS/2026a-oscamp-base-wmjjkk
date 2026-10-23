@@ -31,7 +31,7 @@
 //! Each function includes a `TODO` comment indicating where you need to write code.
 //! Run `cargo test` to check your implementations.
 
-use std::io::{self, Read, Write};
+use std::io::{self, Read, Write,BufRead,BufReader};
 use std::process::{Command, Stdio};
 
 /// Execute the given shell command and return its stdout output.
@@ -53,7 +53,11 @@ pub fn run_command(program: &str, args: &[&str]) -> String {
     // TODO: Set stdout to Stdio::piped()
     // TODO: Execute with .output() and get output
     // TODO: Convert stdout to String and return
-    todo!()
+    let output = Command::new(program)
+        .args(args)
+        .output() // .output() 会自动捕获 stdout 和 stderr，无需手动 piped
+        .expect("无法启动进程");
+    String::from_utf8(output.stdout).expect("输出包含无效的UTF-8字符")
 }
 
 /// Write data to child process (cat) stdin via pipe and read its stdout output.
@@ -89,7 +93,21 @@ pub fn pipe_through_cat(input: &str) -> String {
     // TODO: Write input to child process stdin
     // TODO: Drop stdin to close pipe (otherwise cat won't exit)
     // TODO: Read output from child process stdout
-    todo!()
+    // 1. 创建Command并配置管道
+    let mut child = Command::new("cat")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("无法启动cat进程");
+    // 2. 获取stdin并写入数据
+    let mut stdin = child.stdin.take().expect("无法打开stdin");
+    stdin.write_all(input.as_bytes()).expect("无法写入stdin");
+    drop(stdin);
+    let mut stdout = child.stdout.take().expect("无法打开stdout");
+    let mut output = String::new();
+    stdout.read_to_string(&mut output).expect("无法从stdout读取");
+    child.wait().expect("无法等待child");
+    output
 }
 
 /// Get child process exit code.
@@ -110,7 +128,11 @@ pub fn get_exit_code(command: &str) -> i32 {
     // TODO: Use Command::new("sh").args(["-c", command])
     // TODO: Execute and get status
     // TODO: Return exit code
-    todo!()
+    let status = Command::new("sh")
+        .args(["-c", command])
+        .status()
+        .unwrap();
+    status.code().unwrap_or(-1)
 }
 
 /// Execute the given shell command and return its stdout output as a `Result`.
@@ -137,7 +159,11 @@ pub fn run_command_with_result(program: &str, args: &[&str]) -> io::Result<Strin
     // TODO: Set stdout to Stdio::piped()
     // TODO: Execute with .output() and handle Result
     // TODO: Convert stdout to String with from_utf8, mapping errors to io::Error
-    todo!()
+    let output = Command::new(program) // 指定要执行的程序
+        .args(args) // 传入命令参数
+        .output()?;
+    String::from_utf8(output.stdout)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData,e))
 }
 
 /// Interact with `grep` via bidirectional pipes, filtering lines that contain a pattern.
@@ -167,7 +193,30 @@ pub fn pipe_through_grep(pattern: &str, input: &str) -> String {
     // TODO: Drop stdin to close pipe
     // TODO: Read output from child stdout line by line
     // TODO: Collect and return matching lines
-    todo!()
+    //1. create sub process
+    let mut child = Command::new("grep")
+        .arg(pattern)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    //2. write data to sub process
+    {
+        let mut stdin = child.stdin.take().unwrap();
+        for line in input.lines(){
+            writeln!(stdin,"{}",line).unwrap();
+        }
+    }
+    let stdout = child.stdout.take().unwrap();
+    let reader = BufReader::new(stdout);
+    let mut result = String::new();
+    for line in reader.lines(){
+        let line = line.unwrap();
+        result.push_str(&line);
+        result.push('\n');
+    }
+    child.wait().unwrap();
+    result
 }
 
 #[cfg(test)]
