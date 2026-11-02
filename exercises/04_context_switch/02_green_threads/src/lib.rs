@@ -147,7 +147,7 @@ impl Scheduler {
         ctx.ra = thread_wrapper as usize as u64;
         // 16字节对齐
         ctx.sp = ((stack_top - 16) & !15) as u64;
-        self.thread.push(GreenThread{
+        self.threads.push(GreenThread{
             ctx,
             state: ThreadState::Ready,
             _stack:Some(stack),
@@ -167,7 +167,7 @@ impl Scheduler {
         loop {
             let all_finished = self.threads[1..]
                 .iter()
-                .all(|thread| thread.state == ThreadState::Fininshed);
+                .all(|thread| thread.state == ThreadState::Finished);
             if all_finished{
                 break;
             }
@@ -188,7 +188,7 @@ impl Scheduler {
         let Some(next) = next else{
             return;
         };
-        if self.threads[current].state != ThreadState::Fininshed {
+        if self.threads[current].state != ThreadState::Finished {
             self.threads[current].state = ThreadState::Ready;
         }
         self.threads[next].state = ThreadState::Running;

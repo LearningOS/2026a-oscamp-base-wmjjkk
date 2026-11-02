@@ -80,7 +80,7 @@ impl FdTable {
     /// Get the file object for an fd. Returns None if the fd doesn't exist or is closed.
     pub fn get(&self, fd: usize) -> Option<Arc<dyn File>> {
         match self.entries.get(fd){
-            Some(Some(file)) => Some(Arc::clone(file));
+            Some(Some(file)) => Some(Arc::clone(file)),
             _ => None,
         }
     }
