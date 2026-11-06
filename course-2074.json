@@ -2,8 +2,8 @@
   "schema": 1,
   "courseId": 2074,
   "repository": "LearningOS/2026a-oscamp-base-wmjjkk",
-  "commit": "719d971a466305f4208cd0290ed551705567d48c",
-  "score": 97,
+  "commit": "46647f0cc877e951253fa2a0af29f3465ec87d80",
+  "score": 100,
   "totalScore": 100,
   "exercises": [
     {
@@ -170,15 +170,15 @@
     {
       "name": "tlb_sim",
       "max": 3,
-      "score": 0,
-      "status": "fail",
-      "exitCode": 101
+      "score": 3,
+      "status": "pass",
+      "exitCode": 0
     }
   ],
   "student": "wmjjkk",
-  "runId": "41391598155",
+  "runId": "42219510413",
   "runAttempt": "1",
   "upload": {
-    "status": "accepted"
+    "status": "pending"
   }
 }
